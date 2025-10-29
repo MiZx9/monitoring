@@ -9,7 +9,13 @@ service:
   type: ClusterIP
   port: 9090
 
-resources: {}
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "250m"
 
 scrapeConfigs:
   - job_name: 'node-exporter'
@@ -22,3 +28,7 @@ scrapeConfigs:
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
         regex: "true"
         action: keep
+
+persistence:
+  enabled: false      # true にすると PVC 使用
+  existingClaim: ""
