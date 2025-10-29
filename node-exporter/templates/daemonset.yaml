@@ -14,8 +14,8 @@ spec:
       labels:
         app: node-exporter
     spec:
-      hostNetwork: true           # ノードのネットワークを共有（IPでアクセス可能）
-      hostPID: true               # ノードのプロセス情報を取得可能に
+      hostNetwork: true
+      hostPID: true
       containers:
         - name: node-exporter
           image: quay.io/prometheus/node-exporter:v1.6.0
@@ -43,6 +43,12 @@ spec:
           hostPath:
             path: /sys
       tolerations:
-        - operator: "Exists"    # masterノードにもスケジュール可能にする
-      nodeSelector: {}           # 全ノードに展開
-      affinity: {}
+        - operator: "Exists"
+      nodeSelector: {}  # 全ノードに展開
+      affinity:         # ここに podAntiAffinity をまとめる
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: node-exporter
+              topologyKey: "kubernetes.io/hostname"
