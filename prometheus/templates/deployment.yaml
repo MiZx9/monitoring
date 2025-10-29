@@ -18,6 +18,7 @@ spec:
       containers:
         - name: prometheus
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "--storage.tsdb.path=/prometheus"
             - "--web.enable-lifecycle"
@@ -27,11 +28,17 @@ spec:
             - name: data
               mountPath: /prometheus
           securityContext:
-            runAsUser: 0       # root 権限で書き込み
+            runAsUser: 0    # root で書き込み権限確保
             runAsGroup: 0
+          resources: {{ toYaml .Values.resources | indent 12 }}
       volumes:
         - name: data
-          emptyDir: {}          # テスト用に簡単化、永続化不要
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default "prometheus-pvc" }}
+          {{- else }}
+          emptyDir: {}      # 永続化不要の場合は emptyDir
+          {{- end }}
       restartPolicy: Always
       tolerations:
         - operator: Exists
