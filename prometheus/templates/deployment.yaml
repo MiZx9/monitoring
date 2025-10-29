@@ -18,14 +18,20 @@ spec:
       containers:
         - name: prometheus
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          ports:
-            - containerPort: 9090
           args:
             - "--storage.tsdb.path=/prometheus"
             - "--web.enable-lifecycle"
+          ports:
+            - containerPort: 9090
           volumeMounts:
             - name: data
               mountPath: /prometheus
+          securityContext:
+            runAsUser: 0       # root 権限で書き込み
+            runAsGroup: 0
       volumes:
         - name: data
-          emptyDir: {}
+          emptyDir: {}          # テスト用に簡単化、永続化不要
+      restartPolicy: Always
+      tolerations:
+        - operator: Exists
