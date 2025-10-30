@@ -1,33 +1,35 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: node-exporter
+  name: {{ include "node-exporter.fullname" . }}
   namespace: monitoring
   labels:
-    app: node-exporter
+    app: {{ include "node-exporter.name" . }}
 spec:
   selector:
     matchLabels:
-      app: node-exporter
+      app: {{ include "node-exporter.name" . }}
   template:
     metadata:
       labels:
-        app: node-exporter
+        app: {{ include "node-exporter.name" . }}
     spec:
       hostNetwork: true
       hostPID: true
       containers:
         - name: node-exporter
-          image: quay.io/prometheus/node-exporter:v1.6.0
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "--path.procfs=/host/proc"
             - "--path.sysfs=/host/sys"
             - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
           ports:
             - name: metrics
-              containerPort: 9100
-              hostPort: 9100
+              containerPort: {{ .Values.service.port }}
+              hostPort: {{ .Values.service.port }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: proc
               mountPath: /host/proc
@@ -42,13 +44,9 @@ spec:
         - name: sys
           hostPath:
             path: /sys
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
       tolerations:
-        - operator: "Exists"
-      nodeSelector: {}  # 全ノードに展開
-      affinity:         # ここに podAntiAffinity をまとめる
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: node-exporter
-              topologyKey: "kubernetes.io/hostname"
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
