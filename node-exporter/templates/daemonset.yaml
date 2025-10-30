@@ -18,16 +18,16 @@ spec:
       hostPID: true
       containers:
         - name: node-exporter
-          image: quay.io/prometheus/node-exporter:v1.6.0
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - "--path.procfs=/host/proc"
             - "--path.sysfs=/host/sys"
             - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
           ports:
             - name: metrics
-              containerPort: 9100
-              hostPort: 9100
+              containerPort: {{ .Values.service.port }}
+              hostPort: {{ .Values.service.port }}
           volumeMounts:
             - name: proc
               mountPath: /host/proc
@@ -44,8 +44,8 @@ spec:
             path: /sys
       tolerations:
         - operator: "Exists"
-      nodeSelector: {}  # 全ノードに展開
-      affinity:         # ここに podAntiAffinity をまとめる
+      nodeSelector: {}
+      affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
