@@ -29,7 +29,12 @@ spec:
               containerPort: {{ .Values.service.port }}
               hostPort: {{ .Values.service.port }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
           volumeMounts:
             - name: proc
               mountPath: /host/proc
@@ -44,9 +49,13 @@ spec:
         - name: sys
           hostPath:
             path: /sys
-      nodeSelector:
-        {{- toYaml .Values.nodeSelector | nindent 8 }}
       tolerations:
-        {{- toYaml .Values.tolerations | nindent 8 }}
+        - operator: "Exists"
+      nodeSelector: {}
       affinity:
-        {{- toYaml .Values.affinity | nindent 8 }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: {{ include "node-exporter.name" . }}
+              topologyKey: "kubernetes.io/hostname"
